@@ -26,6 +26,44 @@ import numpy
 # cd "C:\Program Files\Blender Foundation\Blender 2.81\2.81\python\bin"
 # python -m pip install --upgrade pip
 # python -m pip install opencv-contrib-python numpy
+font = cv2.FONT_HERSHEY_SIMPLEX
+fontScale              = 0.5
+fontColor              = (255,255,255)
+lineType               = 2
+def drawMarkerNumsOnFrame(image,faceShape):
+    '''
+        draw colored markers for ease of understanding,
+        red: head orientation 6 points
+        green: mouth width
+        blue: mouth height
+        yellow: brows
+        purple: jaw game
+        cyan: nose
+
+    '''
+
+    global font, fontScale,fontColor,lineType
+    
+    
+    # USING MARKER NUMBERS ON SCREEL APPROACH 1
+    # markers = [31,9,37,46,49,55] # [nose,chin,eye_L,eye_R, mouth_L, mouth_R]
+    # markersPos = [faceShape[30],faceShape[8], faceShape[36], faceShape[45], faceShape[48], faceShape[54]]
+    # i = 0
+    # for marker in markers:
+    #     cv2.putText(image,str(marker), (markersPos[i][0],markersPos[i][1]), font, fontScale, fontColor, lineType)
+    #     i = i+1
+
+    # USE BETTER COLORING 
+    headPos = [faceShape[30],faceShape[8], faceShape[36], faceShape[45], faceShape[48], faceShape[54]]
+    for each in headPos:
+        cv2.circle(image, (each[0],each[1]), 4, (255, 0, 0), -1)
+    mwPos = [faceShape[48],faceShape[54]]
+    for each in mwPos:
+        cv2.circle(image, (each[0],each[1]), 3, (0, 255, 0), -1)
+    mhPos = [faceShape[62],faceShape[66]]
+    for each in mhPos:
+        cv2.circle(image, (each[0],each[1]), 2, (0, 0, 255), -1)
+
 
 class OpenCVAnimOperator(bpy.types.Operator):
     """Operator which runs its self from a timer"""
@@ -128,13 +166,14 @@ class OpenCVAnimOperator(bpy.types.Operator):
                 biggestFace = numpy.zeros(shape=(1,4))
                 for face in faces:
                     if face[2] > biggestFace[0][2]:
-                        print(face)
+                        # print(face)
                         biggestFace[0] = face
 
                 # find the landmarks.
                 _, landmarks = self.fm.fit(image, faces=biggestFace)
                 for mark in landmarks:
                     shape = mark[0]
+                    # print ('NOSE:',shape[30])
 
                     #2D image points. If you change the image, you need to change vector
                     image_points = numpy.array([shape[30],     # Nose tip - 31
@@ -146,7 +185,7 @@ class OpenCVAnimOperator(bpy.types.Operator):
                                             ], dtype = numpy.float32)
 
                     dist_coeffs = numpy.zeros((4,1)) # Assuming no lens distortion
-
+                    print ('IMAGE_POINTS:',image_points)
                     # determine head rotation
                     if hasattr(self, 'rotation_vector'):
                         (success, self.rotation_vector, self.translation_vector) = cv2.solvePnP(self.model_points,
@@ -169,7 +208,7 @@ class OpenCVAnimOperator(bpy.types.Operator):
                     bones["head"].rotation_euler[2] = self.smooth_value("h_y", 5, -(self.rotation_vector[1] - self.first_angle[1])) / 1.5  # Rotate
                     bones["head"].rotation_euler[1] = self.smooth_value("h_z", 5, (self.rotation_vector[2] - self.first_angle[2])) / 1.3   # Left/Right
 
-                    #bones["head"].keyframe_insert(data_path="rotation_euler", index=-1)
+                    bones["head"].keyframe_insert(data_path="rotation_euler", index=-1)
 
                     # mouth position
                     #bones["jaw_master"].location[2] = self.smooth_value("m_h", 2, -self.get_range("mouth_height", numpy.linalg.norm(shape[62] - shape[66])) * 0.06 )
@@ -198,16 +237,18 @@ class OpenCVAnimOperator(bpy.types.Operator):
                     #bones["eyelid_low_ctrl_L"].keyframe_insert(data_path="location", index=2)
 
                     # draw face markers
-                    for (x, y) in shape:
-                        cv2.circle(image, (x, y), 2, (0, 255, 255), -1)
-                    #for each in image_points:
-                    #    cv2.putText(image,
+                    # for (x, y) in shape:
+                    #     cv2.circle(image, (x, y), 2, (0, 255, 255), -1)
+                    # DRAW SPECIAL
+                    # TODO make lower function call optional from gui ( for debugging purposes )
+                    drawMarkerNumsOnFrame(image,shape)
+
 
             # draw detected face
-            #for (x,y,w,h) in faces:
-                #cv2.rectangle(image,(x,y),(x+w,y+h),(255,0,0),1)
+            for (x,y,w,h) in faces:
+                cv2.rectangle(image,(x,y),(x+w,y+h),(255,0,0),1)
+            
             #cv2.putText(image,'Hello World!', self.bottomLeftCornerOfText, self.font, self.fontScale, self.fontColor, self.lineType)
-
             # Show camera image in a window
             cv2.imshow("Output", image)
             cv2.waitKey(1)
