@@ -46,12 +46,12 @@ def drawMarkerNumsOnFrame(image,faceShape):
     
     
     # USING MARKER NUMBERS ON SCREEL APPROACH 1
-    # markers = [31,9,37,46,49,55] # [nose,chin,eye_L,eye_R, mouth_L, mouth_R]
-    # markersPos = [faceShape[30],faceShape[8], faceShape[36], faceShape[45], faceShape[48], faceShape[54]]
-    # i = 0
-    # for marker in markers:
-    #     cv2.putText(image,str(marker), (markersPos[i][0],markersPos[i][1]), font, fontScale, fontColor, lineType)
-    #     i = i+1
+    markers = [38,40,43,47] # [nose,chin,eye_L,eye_R, mouth_L, mouth_R]
+    markersPos = [faceShape[38],faceShape[40], faceShape[43], faceShape[47]]
+    i = 0
+    for marker in markers:
+        cv2.putText(image,str(marker), (markersPos[i][0],markersPos[i][1]), font, fontScale, fontColor, lineType)
+        i = i+1
 
     # USE BETTER COLORING 
     headPos = [faceShape[30],faceShape[8], faceShape[36], faceShape[45], faceShape[48], faceShape[54]]
@@ -204,41 +204,46 @@ class OpenCVAnimOperator(bpy.types.Operator):
                     bones = bpy.data.objects["rig"].pose.bones
 
                     # head rotation
-                    bones["head"].rotation_euler[0] = self.smooth_value("h_x", 5, (self.rotation_vector[0] - self.first_angle[0])) / 1   # Up/Down
-                    bones["head"].rotation_euler[2] = self.smooth_value("h_y", 5, -(self.rotation_vector[1] - self.first_angle[1])) / 1.5  # Rotate
-                    bones["head"].rotation_euler[1] = self.smooth_value("h_z", 5, (self.rotation_vector[2] - self.first_angle[2])) / 1.3   # Left/Right
+                    #bones["head"].rotation_euler[0] = self.smooth_value("h_x", 5, (self.rotation_vector[0] - self.first_angle[0])) / 1   # Up/Down
+                    #bones["head"].rotation_euler[2] = self.smooth_value("h_y", 5, -(self.rotation_vector[1] - self.first_angle[1])) / 1.5  # Rotate
+                    #bones["head"].rotation_euler[1] = self.smooth_value("h_z", 5, (self.rotation_vector[2] - self.first_angle[2])) / 1.3   # Left/Right
 
-                    bones["head"].keyframe_insert(data_path="rotation_euler", index=-1)
+                    #bones["head"].keyframe_insert(data_path="rotation_euler", index=-1)
 
                     # mouth position
                     #bones["jaw_master"].location[2] = self.smooth_value("m_h", 2, -self.get_range("mouth_height", numpy.linalg.norm(shape[62] - shape[66])) * 0.06 )
                     #bones["jaw_master"].location[0] = self.smooth_value("m_w", 2, (self.get_range("mouth_width", numpy.linalg.norm(shape[54] - shape[48])) - 0.5) * 0.04)
                     #bones["jaw_master"].keyframe_insert(data_path="location", index=-1)
 
-                    #eyebrows
-                    #bones["brow_ctrl_L"].location[2] = self.smooth_value("b_l", 3, (self.get_range("brow_left", numpy.linalg.norm(shape[19] - shape[27])) -0.5) * 0.04)
-                    #bones["brow_ctrl_R"].location[2] = self.smooth_value("b_r", 3, (self.get_range("brow_right", numpy.linalg.norm(shape[24] - shape[27])) -0.5) * 0.04)
-
-                    #bones["brow_ctrl_L"].keyframe_insert(data_path="location", index=2)
-                    #bones["brow_ctrl_R"].keyframe_insert(data_path="location", index=2)
+                    #eyebrows inner side
+                    bones["brow.T.L.003"].location[1] = self.smooth_value("b_t_l_i", 3, (self.get_range("brow_left_i", numpy.linalg.norm(shape[21] - shape[27])) -0.5) * 0.04)
+                    bones["brow.T.R.003"].location[1] = self.smooth_value("b_t_r_i", 3, (self.get_range("brow_right_i", numpy.linalg.norm(shape[22] - shape[27])) -0.5) * 0.04)
+                    bones["brow.T.L.003"].keyframe_insert(data_path="location", index=1)
+                    bones["brow.T.R.003"].keyframe_insert(data_path="location", index=1)
+                    #eyebrows outer side
+                    bones["brow.T.L.001"].location[1] = self.smooth_value("b_t_l_o", 3, (self.get_range("brow_left_o", numpy.linalg.norm(shape[17] - shape[27])) -0.5) * 0.04)
+                    bones["brow.T.R.001"].location[1] = self.smooth_value("b_t_r_o", 3, (self.get_range("brow_right_o", numpy.linalg.norm(shape[26] - shape[27])) -0.5) * 0.04)
+                    bones["brow.T.L.001"].keyframe_insert(data_path="location", index=1)
+                    bones["brow.T.R.001"].keyframe_insert(data_path="location", index=1)
+                                        
 
                     # eyelids
-                    #l_open = self.smooth_value("e_l", 2, self.get_range("l_open", -numpy.linalg.norm(shape[48] - shape[44]))  )
-                    #r_open = self.smooth_value("e_r", 2, self.get_range("r_open", -numpy.linalg.norm(shape[41] - shape[39]))  )
-                    #eyes_open = (l_open + r_open) / 2.0 # looks weird if both eyes aren't the same...
-                    #bones["eyelid_up_ctrl_R"].location[2] =   -eyes_open * 0.025 + 0.005
-                    #bones["eyelid_low_ctrl_R"].location[2] =  eyes_open * 0.025 - 0.005
-                    #bones["eyelid_up_ctrl_L"].location[2] =   -eyes_open * 0.025 + 0.005
-                    #bones["eyelid_low_ctrl_L"].location[2] =  eyes_open * 0.025 - 0.005
+                    l_open = self.smooth_value("e_l", 2, self.get_range("l_open", -numpy.linalg.norm(shape[38] - shape[40]))  )
+                    r_open = self.smooth_value("e_r", 2, self.get_range("r_open", -numpy.linalg.norm(shape[43] - shape[47]))  )
+                    eyes_open = (l_open + r_open) / 2.0 # looks weird if both eyes aren't the same...
+                    bones["lid.T.R.002"].location[1] =   -eyes_open * 0.025 + 0.005
+                    bones["lid.B.R.002"].location[1] =  eyes_open * 0.025 - 0.005
+                    bones["lid.T.L.002"].location[1] =   -eyes_open * 0.025 + 0.005
+                    bones["lid.B.L.002"].location[1] =  eyes_open * 0.025 - 0.005
 
-                    #bones["eyelid_up_ctrl_R"].keyframe_insert(data_path="location", index=2)
-                    #bones["eyelid_low_ctrl_R"].keyframe_insert(data_path="location", index=2)
-                    #bones["eyelid_up_ctrl_L"].keyframe_insert(data_path="location", index=2)
-                    #bones["eyelid_low_ctrl_L"].keyframe_insert(data_path="location", index=2)
+                    bones["lid.T.R.002"].keyframe_insert(data_path="location", index=1)
+                    bones["lid.B.R.002"].keyframe_insert(data_path="location", index=1)
+                    bones["lid.T.L.002"].keyframe_insert(data_path="location", index=1)
+                    bones["lid.B.L.002"].keyframe_insert(data_path="location", index=1)
 
                     # draw face markers
-                    # for (x, y) in shape:
-                    #     cv2.circle(image, (x, y), 2, (0, 255, 255), -1)
+                    for (x, y) in shape:
+                        cv2.circle(image, (x, y), 2, (0, 255, 255), -1)
                     # DRAW SPECIAL
                     # TODO make lower function call optional from gui ( for debugging purposes )
                     drawMarkerNumsOnFrame(image,shape)
