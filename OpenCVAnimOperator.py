@@ -72,7 +72,7 @@ class OpenCVAnimOperator(bpy.types.Operator):
 
     # Set paths to trained models downloaded above
     face_detect_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
-    landmark_model_path = "/home/user/Desktop/bdev/MC4B/models/lbfmodel.yaml"  #Linux
+    landmark_model_path = "/home/user/Dev/bpy/MC4B/models/lbfmodel.yaml"  #Linux
     #landmark_model_path = "/Users/username/Downloads/lbfmodel.yaml"         #Mac
     #landmark_model_path = "C:\\Users\\me\\Desktop\\cvmc2\\data\\lbfmodel.yaml"    #Windows
 
@@ -201,8 +201,32 @@ class OpenCVAnimOperator(bpy.types.Operator):
                         self.first_angle = numpy.copy(self.rotation_vector)
 
                     # set bone rotation/positions
-                    bones = bpy.data.objects["rig"].pose.bones
+                    # check weather Rigify Or BlenRig
+                    
+                    bones = bpy.data.objects["biped_blenrig"].pose.bones
 
+                    # BLENRIG SETUP
+                    # head rotation 
+                    bones["head_fk"].rotation_euler[0] = self.smooth_value("h_x", 5, (self.rotation_vector[0] - self.first_angle[0])) / 1   # Up/Down
+                    bones["head_fk"].rotation_euler[2] = self.smooth_value("h_y", 5, -(self.rotation_vector[1] - self.first_angle[1])) / 1.5  # Rotate
+                    bones["head_fk"].rotation_euler[1] = self.smooth_value("h_z", 5, (self.rotation_vector[2] - self.first_angle[2])) / 1.3   # Left/Right
+                    #bones["head_fk"].keyframe_insert(data_path="rotation_euler", index=-1)
+                    
+                    # mouth position
+                    bones["mouth_ctrl"].location[2] = self.smooth_value("m_h", 2, -self.get_range("mouth_height", numpy.linalg.norm(shape[62] - shape[66])) * 0.06 )
+                    bones["mouth_ctrl"].location[0] = self.smooth_value("m_w", 2, (self.get_range("mouth_width", numpy.linalg.norm(shape[54] - shape[48])) - 0.5) * -0.04)
+                    #bones["mouth_ctrl"].keyframe_insert(data_path="location", index=-1)
+
+                    # brows position
+                    bones["brow_ctrl_L"].location[2] = self.smooth_value("b_l", 3, (self.get_range("brow_left", numpy.linalg.norm(shape[19] - shape[27])) -0.5) * 0.04)
+                    bones["brow_ctrl_R"].location[2] = self.smooth_value("b_r", 3, (self.get_range("brow_right", numpy.linalg.norm(shape[24] - shape[27])) -0.5) * 0.04)
+                    # bones["brow_ctrl_L"].keyframe_insert(data_path="location", index=2)
+                    # bones["brow_ctrl_R"].keyframe_insert(data_path="location", index=2)
+
+                    
+                    
+                    # RIGIFY SETUP
+                    # bones = bpy.data.objects["rig"].pose.bones
                     # head rotation
                     #bones["head"].rotation_euler[0] = self.smooth_value("h_x", 5, (self.rotation_vector[0] - self.first_angle[0])) / 1   # Up/Down
                     #bones["head"].rotation_euler[2] = self.smooth_value("h_y", 5, -(self.rotation_vector[1] - self.first_angle[1])) / 1.5  # Rotate
@@ -215,31 +239,31 @@ class OpenCVAnimOperator(bpy.types.Operator):
                     #bones["jaw_master"].location[0] = self.smooth_value("m_w", 2, (self.get_range("mouth_width", numpy.linalg.norm(shape[54] - shape[48])) - 0.5) * 0.04)
                     #bones["jaw_master"].keyframe_insert(data_path="location", index=-1)
 
-                    #eyebrows inner side
-                    bones["brow.T.L.003"].location[1] = self.smooth_value("b_t_l_i", 3, (self.get_range("brow_left_i", numpy.linalg.norm(shape[21] - shape[27])) -0.5) * 0.04)
-                    bones["brow.T.R.003"].location[1] = self.smooth_value("b_t_r_i", 3, (self.get_range("brow_right_i", numpy.linalg.norm(shape[22] - shape[27])) -0.5) * 0.04)
-                    bones["brow.T.L.003"].keyframe_insert(data_path="location", index=1)
-                    bones["brow.T.R.003"].keyframe_insert(data_path="location", index=1)
-                    #eyebrows outer side
-                    bones["brow.T.L.001"].location[1] = self.smooth_value("b_t_l_o", 3, (self.get_range("brow_left_o", numpy.linalg.norm(shape[17] - shape[27])) -0.5) * 0.04)
-                    bones["brow.T.R.001"].location[1] = self.smooth_value("b_t_r_o", 3, (self.get_range("brow_right_o", numpy.linalg.norm(shape[26] - shape[27])) -0.5) * 0.04)
-                    bones["brow.T.L.001"].keyframe_insert(data_path="location", index=1)
-                    bones["brow.T.R.001"].keyframe_insert(data_path="location", index=1)
+                    # #eyebrows inner side
+                    # bones["brow.T.L.003"].location[1] = self.smooth_value("b_t_l_i", 3, (self.get_range("brow_left_i", numpy.linalg.norm(shape[21] - shape[27])) -0.5) * 0.04)
+                    # bones["brow.T.R.003"].location[1] = self.smooth_value("b_t_r_i", 3, (self.get_range("brow_right_i", numpy.linalg.norm(shape[22] - shape[27])) -0.5) * 0.04)
+                    # bones["brow.T.L.003"].keyframe_insert(data_path="location", index=1)
+                    # bones["brow.T.R.003"].keyframe_insert(data_path="location", index=1)
+                    # #eyebrows outer side
+                    # bones["brow.T.L.001"].location[1] = self.smooth_value("b_t_l_o", 3, (self.get_range("brow_left_o", numpy.linalg.norm(shape[17] - shape[27])) -0.5) * 0.04)
+                    # bones["brow.T.R.001"].location[1] = self.smooth_value("b_t_r_o", 3, (self.get_range("brow_right_o", numpy.linalg.norm(shape[26] - shape[27])) -0.5) * 0.04)
+                    # bones["brow.T.L.001"].keyframe_insert(data_path="location", index=1)
+                    # bones["brow.T.R.001"].keyframe_insert(data_path="location", index=1)
                                         
 
                     # eyelids
-                    l_open = self.smooth_value("e_l", 2, self.get_range("l_open", -numpy.linalg.norm(shape[38] - shape[40]))  )
-                    r_open = self.smooth_value("e_r", 2, self.get_range("r_open", -numpy.linalg.norm(shape[43] - shape[47]))  )
-                    eyes_open = (l_open + r_open) / 2.0 # looks weird if both eyes aren't the same...
-                    bones["lid.T.R.002"].location[1] =   -eyes_open * 0.025 + 0.005
-                    bones["lid.B.R.002"].location[1] =  eyes_open * 0.025 - 0.005
-                    bones["lid.T.L.002"].location[1] =   -eyes_open * 0.025 + 0.005
-                    bones["lid.B.L.002"].location[1] =  eyes_open * 0.025 - 0.005
+                    # l_open = self.smooth_value("e_l", 2, self.get_range("l_open", -numpy.linalg.norm(shape[38] - shape[40]))  )
+                    # r_open = self.smooth_value("e_r", 2, self.get_range("r_open", -numpy.linalg.norm(shape[43] - shape[47]))  )
+                    # eyes_open = (l_open + r_open) / 2.0 # looks weird if both eyes aren't the same...
+                    # bones["lid.T.R.002"].location[1] =   -eyes_open * 0.025 + 0.005
+                    # bones["lid.B.R.002"].location[1] =  eyes_open * 0.025 - 0.005
+                    # bones["lid.T.L.002"].location[1] =   -eyes_open * 0.025 + 0.005
+                    # bones["lid.B.L.002"].location[1] =  eyes_open * 0.025 - 0.005
 
-                    bones["lid.T.R.002"].keyframe_insert(data_path="location", index=1)
-                    bones["lid.B.R.002"].keyframe_insert(data_path="location", index=1)
-                    bones["lid.T.L.002"].keyframe_insert(data_path="location", index=1)
-                    bones["lid.B.L.002"].keyframe_insert(data_path="location", index=1)
+                    # bones["lid.T.R.002"].keyframe_insert(data_path="location", index=1)
+                    # bones["lid.B.R.002"].keyframe_insert(data_path="location", index=1)
+                    # bones["lid.T.L.002"].keyframe_insert(data_path="location", index=1)
+                    # bones["lid.B.L.002"].keyframe_insert(data_path="location", index=1)
 
                     # draw face markers
                     for (x, y) in shape:
@@ -287,6 +311,49 @@ class OpenCVAnimOperator(bpy.types.Operator):
         cv2.destroyAllWindows()
         self._cap.release()
         self._cap = None
+
+
+################
+# EXTRA STUFF
+################
+def UpdatedFunction(self, context):
+    print("Updating Function")
+    print(self.fc_activeJson)
+    # FF_PT_Model.testValue = self.sk_filterStr
+    return
+# from . ff_model import MyPropertyGroup
+
+def state():
+    return bpy.context.scene.ff_MC4B_prop_grp
+class MC4BPropGrp(bpy.types.PropertyGroup):
+
+    Src_Rig: bpy.props.PointerProperty(
+        type=bpy.types.Object,
+        poll=lambda self, obj: obj.type == 'OBJECT' ,
+        update=lambda self, ctx: state().update_source()
+    )
+
+    invalid_selected_source: bpy.props.PointerProperty(
+        type=bpy.types.Object,
+    )
+    #source: bpy.props.PointerProperty(type=bpy.types.Object)
+    #target: bpy.props.PointerProperty(type=bpy.types.Object)
+
+    def update_source(self):
+        self.target = bpy.context.object
+        #print (self.target)
+        #print (bpy.context.object)
+        self.Src_Rig = self.target
+        if self.Src_Rig == None:
+            print("NOTHING")
+            return
+        else:
+            print ("SKIPPING")
+            return
+
+
+
+bpy.utils.register_class(MC4BPropGrp)
 
 def register():
     bpy.utils.register_class(OpenCVAnimOperator)

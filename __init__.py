@@ -25,7 +25,14 @@ bl_info = {
 import bpy
 from bpy import context as context
 
-from . OpenCVAnimOperator import OpenCVAnimOperator
+from . OpenCVAnimOperator import state
+from . OpenCVAnimOperator import OpenCVAnimOperator, MC4BPropGrp
+
+# SPECIAL LINE
+bpy.types.Scene.ff_MC4B_prop_grp = bpy.props.PointerProperty(type=MC4BPropGrp)
+
+
+
 
 # MAIN PANEL CONTROL
 class MC4B_PT_Panel(bpy.types.Panel):
@@ -37,13 +44,25 @@ class MC4B_PT_Panel(bpy.types.Panel):
     def draw(self,context):
         #active_obj = context.active_object
         layout = self.layout
+        s = state()
+        col0 = layout.column(align = True)
+        col0.label(text='RigSetting')
+        row = col0.row(align = True)
+        row.prop(s, 'Src_Rig', text='Rig Src', icon='ARMATURE_DATA')
 
         col = layout.column(align=1)
         row = col.row(align = True)
         row.operator("wm.opencv_operator", text="Start Camera")
 
+
+
+
+
+
+
 classes = (
         OpenCVAnimOperator,
         MC4B_PT_Panel)
+
 
 register,unregister = bpy.utils.register_classes_factory(classes)
