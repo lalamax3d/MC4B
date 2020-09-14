@@ -30,6 +30,10 @@ font = cv2.FONT_HERSHEY_SIMPLEX
 fontScale              = 0.5
 fontColor              = (255,255,255)
 lineType               = 2
+
+
+
+
 def drawMarkerNumsOnFrame(image,faceShape):
     '''
         draw colored markers for ease of understanding,
@@ -43,7 +47,6 @@ def drawMarkerNumsOnFrame(image,faceShape):
     '''
 
     global font, fontScale,fontColor,lineType
-    
     
     # USING MARKER NUMBERS ON SCREEL APPROACH 1
     markers = [38,40,43,47] # [nose,chin,eye_L,eye_R, mouth_L, mouth_R]
@@ -75,7 +78,6 @@ class OpenCVAnimOperator(bpy.types.Operator):
     landmark_model_path = "/home/user/Dev/bpy/MC4B/models/lbfmodel.yaml"  #Linux
     #landmark_model_path = "/Users/username/Downloads/lbfmodel.yaml"         #Mac
     #landmark_model_path = "C:\\Users\\me\\Desktop\\cvmc2\\data\\lbfmodel.yaml"    #Windows
-
     # Load models
     fm = cv2.face.createFacemarkLBF()
     fm.loadModel(landmark_model_path)
@@ -84,6 +86,8 @@ class OpenCVAnimOperator(bpy.types.Operator):
     _timer = None
     _cap  = None
     stop = False
+    print ("OPERATOR PROPERTY CHECK")
+    
 
     # Webcam resolution:
     width = 640
@@ -140,7 +144,11 @@ class OpenCVAnimOperator(bpy.types.Operator):
             return (value - self.range[name][0]) / val_range
         else:
             return 0.0
-
+    def get_rigType(self,context):
+        print ("HERE")
+        print (context.active_object)
+        print (context.scene.ff_MC4B_prop_grp.sHead)
+        
     # The main "loop"
     def modal(self, context, event):
 
@@ -149,6 +157,7 @@ class OpenCVAnimOperator(bpy.types.Operator):
             return {'CANCELLED'}
 
         if event.type == 'TIMER':
+            self.get_rigType(context)
             self.init_camera()
             _, image = self._cap.read()
             #gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -270,6 +279,7 @@ class OpenCVAnimOperator(bpy.types.Operator):
                         cv2.circle(image, (x, y), 2, (0, 255, 255), -1)
                     # DRAW SPECIAL
                     # TODO make lower function call optional from gui ( for debugging purposes )
+                    
                     drawMarkerNumsOnFrame(image,shape)
 
 
@@ -329,7 +339,7 @@ class MC4BPropGrp(bpy.types.PropertyGroup):
 
     Src_Rig: bpy.props.PointerProperty(
         type=bpy.types.Object,
-        poll=lambda self, obj: obj.type == 'OBJECT' ,
+        poll=lambda self, obj: obj.type == 'ARMATURE' ,
         update=lambda self, ctx: state().update_source()
     )
 
@@ -337,19 +347,35 @@ class MC4BPropGrp(bpy.types.PropertyGroup):
         type=bpy.types.Object,
     )
     #source: bpy.props.PointerProperty(type=bpy.types.Object)
-    #target: bpy.props.PointerProperty(type=bpy.types.Object)
+    targetRig: bpy.props.PointerProperty(
+        type=bpy.types.Object,
+        poll=lambda self, obj: obj.type == 'ARMATURE' ,
+        update=lambda self, ctx: state().update_source()
+    )
+    drawPoints: bpy.props.BoolProperty(name="Draw Points", description="Draw points , helpful for dubugging", default=False)
+    cHead: bpy.props.BoolProperty(name="Head", description="capture head rotation or not", default=False)
+    sHead: bpy.props.FloatProperty(name="Smooth",default=4.5)
+    cMouth: bpy.props.BoolProperty(name="Mouth", description="Mouth / Jaw", default=False)
+    sMouth: bpy.props.FloatProperty(name="Smooth",default=1.5)
+    cEyes: bpy.props.BoolProperty(name="Eyes", description="capture eyes", default=False)
+    sEyes: bpy.props.FloatProperty(name="Smooth",default=0.5)
+
+    cBrows: bpy.props.BoolProperty(name="Brows", description="capture brows", default=False)
+    sBrows: bpy.props.FloatProperty(name="Smooth",default=2.1)
+
+    enableStart: bpy.props.BoolProperty(name="All Good", description="Lets start", default=False)
 
     def update_source(self):
-        self.target = bpy.context.object
-        #print (self.target)
-        #print (bpy.context.object)
-        self.Src_Rig = self.target
-        if self.Src_Rig == None:
-            print("NOTHING")
+        print ("Update Source in PropGroup")
+        if bpy.context.object.type == 'ARMATURE':
+            self.targetRig = bpy.context.object
+        if self.targetRig != None:
+            self.enableStart = True
             return
-        else:
-            print ("SKIPPING")
-            return
+        # else:
+        #     print ("SKIPPING")
+        #     self.enableStart = False
+        #     return
 
 
 

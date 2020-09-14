@@ -42,17 +42,83 @@ class MC4B_PT_Panel(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     def draw(self,context):
-        #active_obj = context.active_object
         layout = self.layout
         s = state()
+        
+     
+        
+        col1 = layout.column(align = True)
+        col1.label(text='Operator Settings')
+        row = col1.row(align = True); row.prop(s, 'drawPoints')
+        
+        split = col1.row().split(factor=0.3)
+        r1 = split.column().row(align=True); r1.prop(s, 'cHead')
+        r2 = split.column().row(align=True); r2.prop(s, 'sHead')
+        split = col1.row().split(factor=0.3)
+        r1 = split.column().row(align=True); r1.prop(s, 'cMouth')
+        r2 = split.column().row(align=True); r2.prop(s, 'sMouth')
+        split = col1.row().split(factor=0.3)
+        r1 = split.column().row(align=True); r1.prop(s, 'cEyes')
+        r2 = split.column().row(align=True); r2.prop(s, 'sEyes')
+        split = col1.row().split(factor=0.3)
+        r1 = split.column().row(align=True); r1.prop(s, 'cBrows')
+        r2 = split.column().row(align=True); r2.prop(s, 'sBrows')
+        
+        target = None
+        if bpy.context.active_object:
+            target = context.active_object
+        checkArmature = False
+        checkRigType = 'supports rigify,blenrig'
+        readyToStart = False
+        if target.type == 'ARMATURE':
+            checkArmature = True
+            if checkArmature:
+                if 'rig_id' in target.data:
+                    # its rigify
+                    checkRigType = "RIGIFY"
+                    readyToStart = True
+                elif 'rig_name' in target.data:
+                    # its blenrig
+                    checkRigType = "BLENRIG"
+                    readyToStart = True
+                else:
+                    readyToStart = False
+                    checkRigType = 'supports rigify,blenrig'
+                    pass
+        checkArmature = False
+        checkRigType = 'supports rigify,blenrig'
+        readyToStart = False
+        if target.type == 'ARMATURE':
+            checkArmature = True
+            if checkArmature:
+                if 'rig_id' in target.data:
+                    # its rigify
+                    checkRigType = "RIGIFY"
+                    readyToStart = True
+                elif 'rig_name' in target.data:
+                    # its blenrig
+                    checkRigType = "BLENRIG"
+                    readyToStart = True
+                else:
+                    readyToStart = False
+                    checkRigType = 'supports rigify,blenrig'
+                    pass
+
         col0 = layout.column(align = True)
-        col0.label(text='RigSetting')
-        row = col0.row(align = True)
-        row.prop(s, 'Src_Rig', text='Rig Src', icon='ARMATURE_DATA')
+        col0.label(text='Readyness')
+        row = col0.row(align = True); row.label(text="Target: %s "%(target.name))
+        row = col0.row(align = True); row.label(text="Armature: %s "%(checkArmature))
+        row = col0.row(align = True); row.label(text="TYPE: %s "%(checkRigType))
+        # row = col0.row(align = True); row.label(text="targetRig: %s "%(s.targetRig.name))
+        #row.prop(s, 'Src_Rig', text='Rig Src', icon='ARMATURE_DATA')
 
         col = layout.column(align=1)
         row = col.row(align = True)
-        row.operator("wm.opencv_operator", text="Start Camera")
+        if readyToStart:
+            row.operator("wm.opencv_operator", text="Start Camera")
+        else:
+            row.label(text="INFO: %s "%("Select Right Thing"))
+
 
 
 
